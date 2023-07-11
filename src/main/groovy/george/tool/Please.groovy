@@ -2,7 +2,7 @@ package george.tool
 
 import george.tool.build.BuildGroup
 import george.tool.e1.E1Group
-
+import george.tool.lib.ConfigPropertiesProvider
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
@@ -20,7 +20,7 @@ import java.util.concurrent.Callable
                 $/================================/$,
                 $/ /$
         ],
-        footer = "@|bold,blue Copyright(c) 2023 |@",
+        footer = "@|bold,blue George Shumakov, 2023 |@",
         showDefaultValues = true,
         subcommands = [
                 BuildGroup.class,
@@ -45,7 +45,9 @@ class Please implements Callable<Integer> {
     }
 
     static void main(String... args) {
-        int code = new CommandLine(new Please()).execute(args)
+        def cmd =new CommandLine(new Please())
+        cmd.setDefaultValueProvider(new ConfigPropertiesProvider("/Users/dandelion/Documents/picocli-test/config.properties"))
+        def code = cmd.execute(args)
         System.exit(code)
     }
 }

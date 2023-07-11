@@ -9,21 +9,24 @@ class ConfigPropertiesProvider implements IDefaultValueProvider {
 
     private final IDefaultValueProvider provider
     private final File configFile
+    private final Properties configProperties
 
     ConfigPropertiesProvider(String configPath) {
         if (INSTANCE != null) {
             throw new IllegalStateException("Multiple configuration instances are forbidden!")
         }
 
-        this.configFile = new File(
-                configPath == null ?
-                        new File(ConfigPropertiesProvider.class.getProtectionDomain().getCodeSource().getLocation()
-                                .toURI()).getPath() + "config.properties" :
-                        configPath
-        )
+        configFile = configPath == null ? new File(System.getProperty('user.home'), '.please/config.properties') : new File(configPath)
+
+        configProperties = new Properties()
+        if (configFile.exists() && configFile.canRead()) {
+            try (def ins = new FileInputStream(configFile)) {
+                configProperties.load(ins)
+            }
+        }
 
         INSTANCE = this
-        provider = new CommandLine.PropertiesDefaultProvider(this.configFile)
+        provider = new CommandLine.PropertiesDefaultProvider(configProperties)
     }
 
     @Override
@@ -31,25 +34,19 @@ class ConfigPropertiesProvider implements IDefaultValueProvider {
         return provider.defaultValue(argSpec)
     }
 
-    void store(AbstractMap.SimpleEntry<String, String>... keyValues) {
-        Properties result = new Properties()
-
-        try (def cfgFile = new FileInputStream(configFile)) {
-            result.load(cfgFile)
-        }
-
-        boolean hasStore = false
+    void commit(AbstractMap.SimpleEntry<String, String>... keyValues) {
         keyValues.each {
-            if (!Objects.equals(result.getProperty(it.getKey()), it.getValue())) {
-                result.setProperty(it.getKey(), it.getValue())
-                hasStore = true
-            }
+            configProperties.setProperty(it.getKey(), it.getValue())
+        }
+    }
+
+    void push() {
+        if (!configFile.getParentFile().exists()) {
+            configFile.getParentFile().mkdirs()
         }
 
-        if (hasStore) {
-            try (def cfgFile = new FileOutputStream(configFile)) {
-                result.store(cfgFile, null)
-            }
+        try (def cfgFile = new FileOutputStream(configFile)) {
+            configProperties.store(cfgFile, null)
         }
     }
 }

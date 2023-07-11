@@ -15,7 +15,7 @@ class BuildGroup implements Callable<Integer> {
     Integer call() throws Exception {
         System.out.println "bi from bar y=${y}"
 
-        ConfigPropertiesProvider.INSTANCE.store(new AbstractMap.SimpleEntry("please.build.y", y.toString()))
+        ConfigPropertiesProvider.INSTANCE.commit(new AbstractMap.SimpleEntry("please.build.y", y.toString()))
         return 23
     }
 

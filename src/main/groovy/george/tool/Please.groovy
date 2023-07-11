@@ -45,8 +45,15 @@ class Please implements Callable<Integer> {
     }
 
     static void main(String... args) {
+
         def cmd =new CommandLine(new Please())
-        cmd.setDefaultValueProvider(new ConfigPropertiesProvider("/Users/dandelion/Documents/picocli-test/config.properties"))
+        def cfg = new ConfigPropertiesProvider()
+        cmd.setDefaultValueProvider(cfg)
+
+        Runtime.getRuntime().addShutdownHook {
+            cfg.push()
+        }
+
         def code = cmd.execute(args)
         System.exit(code)
     }
